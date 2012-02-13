@@ -1,7 +1,9 @@
-import csv, urllib, httplib
-from StringIO import StringIO
-
+import csv
 import logging
+import urllib
+import requests
+
+from StringIO import StringIO
 
 LOG_FILENAME = 'palo-request.log'
 logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
@@ -9,18 +11,19 @@ logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
 class BasePaloObject(object):
 
     def execute(self, server, port, action, **params):
-        h = httplib.HTTPConnection(server, port)
+        action = "http://%(server)s:%(port)s%(action)s?%(params)s" % {  'server':server, 
+                                                                        'port':port, 
+                                                                        'action':action,
+                                                                        'params':urllib.urlencode(params)}
 
-        logging.info("REQUESTING INFO: %s?%s" % (action, urllib.urlencode(params)))
+        logging.info("REQUESTING INFO: %s" % action)
         
-        h.request("GET", "%s?%s" % (action, urllib.urlencode(params)), headers={})
-        r = h.getresponse()
-        payload = r.read()
+        r = requests.get(action)
+        payload = r.text
         
         logging.info("RESPONSE: %s" % payload)
         
-        if r.status != 200:
-            raise Exception("Error: %s returned (%d): %s" % (action, r.status, payload))
-
+        if r.status_code != requests.codes.ok:
+            raise Exception("Error: %s returned (%d): %s" % (action, r.status_code, payload))
 
         return csv.reader(StringIO(payload), delimiter=';')

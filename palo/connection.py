@@ -1,7 +1,6 @@
 import csv
-import hashlib
 import urllib
-import urllib2
+import hashlib
 
 from base import BasePaloObject
 from database import Database, DATABASE_TYPE_NORMAL
